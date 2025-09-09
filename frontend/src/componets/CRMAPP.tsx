@@ -160,98 +160,6 @@ const Header: React.FC<HeaderProps> = ({ user, onLogout, currentView, onViewChan
             <nav className="hidden md:flex space-x-6">
               {['dashboard', 'campaigns', 'segments'].map((view) => (
                 <button
-              onClick={previewAudience}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-            >
-              Preview Audience
-            </button>
-            {audienceSize !== null && (
-              <div className="flex items-center text-sm text-gray-600">
-                <Users className="h-4 w-4 mr-1" />
-                Audience Size: {audienceSize.toLocaleString()} customers
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Message Composer */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Campaign Message</h3>
-          <button
-            onClick={getMessageSuggestions}
-            className="flex items-center text-sm text-purple-600 hover:text-purple-700"
-          >
-            <Brain className="h-4 w-4 mr-1" />
-            AI Suggestions
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Message Template (use {'{name}'} for personalization)
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={3}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Enter your message template..."
-            />
-          </div>
-
-          {messageSuggestions.length > 0 && (
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">AI Suggestions:</p>
-              <div className="space-y-2">
-                {messageSuggestions.map((suggestion, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setMessage(suggestion)}
-                    className="block w-full text-left p-3 bg-purple-50 rounded-lg hover:bg-purple-100 text-sm"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Create Campaign Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={createCampaign}
-          disabled={loading}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Creating Campaign...' : 'Create Campaign'}
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default CRMApp;
-
-// Additional TypeScript interfaces for completeness
-export interface FieldOption {
-  value: string;
-  label: string;
-}
-
-export interface OperatorOption {
-  value: string;
-  label: string;
-}
-
-export interface MessageSuggestion {
-  segment: string;
-  messages: string[];
-}
                   key={view}
                   onClick={() => onViewChange(view)}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -789,3 +697,79 @@ const SegmentBuilder: React.FC = () => {
 
           <div className="flex space-x-4">
             <button
+              onClick={previewAudience}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+            >
+              Preview Audience
+            </button>
+            {audienceSize !== null && (
+              <div className="flex items-center text-sm text-gray-600">
+                <Users className="h-4 w-4 mr-1" />
+                Audience Size: {audienceSize.toLocaleString()} customers
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Message Composer */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Campaign Message</h3>
+          <button
+            onClick={getMessageSuggestions}
+            className="flex items-center text-sm text-purple-600 hover:text-purple-700"
+          >
+            <Brain className="h-4 w-4 mr-1" />
+            AI Suggestions
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Message Template (use {'{name}'} for personalization)
+            </label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={3}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Enter your message template..."
+            />
+          </div>
+
+          {messageSuggestions.length > 0 && (
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">AI Suggestions:</p>
+              <div className="space-y-2">
+                {messageSuggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setMessage(suggestion)}
+                    className="block w-full text-left p-3 bg-purple-50 rounded-lg hover:bg-purple-100 text-sm"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Create Campaign Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={createCampaign}
+          disabled={loading}
+          className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? 'Creating Campaign...' : 'Create Campaign'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CRMApp;
