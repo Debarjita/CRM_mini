@@ -1,12 +1,11 @@
 {
   "info": {
-  "name": "Mini CRM Platform API",
-  "description": "Comprehensive API collection for the Mini CRM Platform with customer segmentation, campaign delivery, and AI integration",
-  "version": "1.0.0",
-  "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
-  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-},
-
+    "name": "Mini CRM Platform API",
+    "description": "Comprehensive API collection for the Mini CRM Platform with customer segmentation, campaign delivery, and AI integration",
+    "version": "1.0.0",
+    "_postman_id": "12345678-abcd-efgh-ijkl-1234567890ab",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
   "variable": [
     {
       "key": "baseUrl",
@@ -81,23 +80,14 @@
           }
         },
         {
-          "name": "Ingest Order Data",
+          "name": "Get All Customers",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"id\": \"order_001\",\n  \"customerId\": \"cust_001\",\n  \"amount\": 2500,\n  \"date\": \"2024-01-15T10:30:00.000Z\",\n  \"items\": [\"Product A\", \"Product B\"]\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/orders",
+              "raw": "{{baseUrl}}/api/customers",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "orders"]
+              "path": ["api", "customers"]
             }
           }
         },
@@ -324,65 +314,6 @@
                   "value": "2024-01-31"
                 }
               ]
-            }
-          }
-        },
-        {
-          "name": "Segment Analysis",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/segments/analysis",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "segments", "analysis"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Delivery System",
-      "item": [
-        {
-          "name": "Vendor API - Send Message",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"deliveryId\": \"del_123456789\",\n  \"customerEmail\": \"customer@example.com\",\n  \"message\": \"Hi John, here's your special offer!\",\n  \"simulate\": \"success\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/vendor/send",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "vendor", "send"]
-            }
-          }
-        },
-        {
-          "name": "Delivery Receipt Webhook",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"deliveryId\": \"del_123456789\",\n  \"status\": \"SENT\",\n  \"timestamp\": \"2024-01-15T10:35:00.000Z\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/delivery-receipt",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "delivery-receipt"]
             }
           }
         }

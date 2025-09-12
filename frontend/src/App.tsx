@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import CRMApp from './componets/CRMApp';
+import CRMApp from './componets/CRMApp'; 
 
 function App() {
   return (

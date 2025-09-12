@@ -1,4 +1,49 @@
 // sample-data.js - Test data for the Mini CRM Platform
+const mongoose = require("mongoose");
+require("dotenv").config();
+
+// Connect to MongoDB
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ Connected to MongoDB');
+  } catch (error) {
+    console.error('❌ MongoDB connection failed:', error);
+    process.exit(1);
+  }
+};
+
+require("./models"); // if this loads all schemas
+const Customer = mongoose.model("Customer");
+const User = mongoose.model("User");
+const Campaign = mongoose.model("Campaign");
+const Order = mongoose.model("Order");
+const communicationLog= mongoose.model("CommunicationLog");
+
+// Fixed sample users - removed custom id field, let MongoDB generate _id
+const sampleUsers = [
+  {
+    name: 'Admin User',
+    email: 'admin@example.com',
+    role: 'admin',
+    createdAt: new Date('2023-01-01T00:00:00Z')
+  },
+  {
+    name: 'Marketing Manager',
+    email: 'marketing@example.com',
+    role: 'user', // Changed from 'manager' to match schema enum
+    createdAt: new Date('2023-01-15T00:00:00Z')
+  },
+  {
+    name: 'Campaign Specialist',
+    email: 'campaigns@example.com',
+    role: 'user',
+    createdAt: new Date('2023-02-01T00:00:00Z')
+  }
+];
 
 const sampleCustomers = [
   {
@@ -162,164 +207,448 @@ const sampleOrders = [
   }
 ];
 
-// Sample segment rules for testing
+// Updated sample campaigns to use actual user IDs after insertion
+const createSampleCampaigns = (userIds) => [
+  {
+    name: 'Summer Sale VIP Customers',
+    userId: userIds[0], // Use actual MongoDB ObjectId
+    segmentRules: {
+      operator: 'AND',
+      conditions: [
+        {
+          field: 'totalSpends',
+          operator: 'gte',
+          value: 500
+        },
+        {
+          field: 'visits',
+          operator: 'gte',
+          value: 5
+        }
+      ]
+    },
+    message: '🌞 Exclusive Summer Sale Alert! As one of our VIP customers, enjoy 25% off all premium items. Use code SUMMER25 at checkout. Valid until July 31st!',
+    audienceSize: 152,
+    status: 'COMPLETED',
+    stats: {
+      sent: 150,
+      failed: 2,
+      pending: 0
+    },
+    createdAt: new Date('2024-07-15T10:00:00Z')
+  },
+  {
+    name: 'Win Back Inactive Customers',
+    userId: userIds[0],
+    segmentRules: {
+      operator: 'AND',
+      conditions: [
+        {
+          field: 'lastVisit',
+          operator: 'lt',
+          value: new Date('2024-06-01T00:00:00Z')
+        },
+        {
+          field: 'totalSpends',
+          operator: 'gte',
+          value: 100
+        }
+      ]
+    },
+    message: 'We miss you! 💔 It\'s been a while since your last visit. Here\'s 30% off to welcome you back. Use code COMEBACK30. We have exciting new arrivals waiting for you!',
+    audienceSize: 89,
+    status: 'PROCESSING',
+    stats: {
+      sent: 45,
+      failed: 1,
+      pending: 43
+    },
+    createdAt: new Date('2024-08-20T14:30:00Z')
+  },
+  {
+    name: 'New Customer Welcome Series',
+    userId: userIds[1],
+    segmentRules: {
+      operator: 'AND',
+      conditions: [
+        {
+          field: 'visits',
+          operator: 'eq',
+          value: 1
+        },
+        {
+          field: 'createdAt',
+          operator: 'gte',
+          value: new Date('2024-08-01T00:00:00Z')
+        }
+      ]
+    },
+    message: 'Welcome to our family! 🎉 Thank you for your first purchase. Enjoy 15% off your next order with code WELCOME15. Plus, get free shipping on orders over $50!',
+    audienceSize: 234,
+    status: 'COMPLETED',
+    stats: {
+      sent: 230,
+      failed: 4,
+      pending: 0
+    },
+    createdAt: new Date('2024-08-25T09:15:00Z')
+  },
+  {
+    name: 'High Value Birthday Campaign',
+    userId: userIds[0],
+    segmentRules: {
+      operator: 'OR',
+      conditions: [
+        {
+          field: 'totalSpends',
+          operator: 'gte',
+          value: 1000
+        },
+        {
+          field: 'tags',
+          operator: 'contains',
+          value: 'birthday-month'
+        }
+      ]
+    },
+    message: '🎂 Happy Birthday Month! Celebrate with an exclusive 40% off your entire purchase. As a valued customer, you deserve the best. Code: BIRTHDAY40',
+    audienceSize: 67,
+    status: 'PENDING',
+    stats: {
+      sent: 0,
+      failed: 0,
+      pending: 67
+    },
+    createdAt: new Date('2024-09-01T16:45:00Z')
+  },
+  {
+    name: 'Flash Sale - Limited Time',
+    userId: userIds[1],
+    segmentRules: {
+      operator: 'AND',
+      conditions: [
+        {
+          field: 'visits',
+          operator: 'gte',
+          value: 3
+        },
+        {
+          field: 'lastVisit',
+          operator: 'gte',
+          value: new Date('2024-08-15T00:00:00Z')
+        }
+      ]
+    },
+    message: '⚡ FLASH SALE ALERT! 24 hours only - 50% off selected items! You\'ve been chosen for early access. Shop now before it\'s gone! No code needed.',
+    audienceSize: 445,
+    status: 'FAILED',
+    stats: {
+      sent: 203,
+      failed: 242,
+      pending: 0
+    },
+    createdAt: new Date('2024-08-30T11:20:00Z')
+  }
+];
+
+// Sample segment rules for different customer segments
 const sampleSegmentRules = [
   {
-    name: 'High Value Customers',
+    name: 'VIP Customers',
     rules: {
       operator: 'AND',
       conditions: [
-        { field: 'totalSpends', operator: '>', value: '15000' },
-        { field: 'visits', operator: '>=', value: '5' }
+        { field: 'totalSpends', operator: 'gte', value: 10000 },
+        { field: 'visits', operator: 'gte', value: 5 }
       ]
-    },
-    description: 'Customers who have spent more than ₹15,000 and visited at least 5 times'
+    }
   },
   {
-    name: 'Inactive Premium Customers',
-    rules: {
-      operator: 'AND', 
-      conditions: [
-        { field: 'totalSpends', operator: '>', value: '10000' },
-        { field: 'lastVisit', operator: 'inactive_days', value: '60' }
-      ]
-    },
-    description: 'Premium customers who haven\'t visited in the last 60 days'
-  },
-  {
-    name: 'New Low-Engagement Customers',
+    name: 'New Customers',
     rules: {
       operator: 'AND',
       conditions: [
-        { field: 'visits', operator: '<=', value: '2' },
-        { field: 'totalSpends', operator: '<', value: '5000' }
+        { field: 'visits', operator: 'lte', value: 2 },
+        { field: 'createdAt', operator: 'gte', value: new Date('2024-01-01') }
       ]
-    },
-    description: 'Customers with 2 or fewer visits and low spending'
+    }
   },
   {
-    name: 'Frequent Shoppers',
+    name: 'Inactive Customers',
     rules: {
       operator: 'AND',
       conditions: [
-        { field: 'visits', operator: '>=', value: '6' },
-        { field: 'lastVisit', operator: 'inactive_days', value: '30' }
+        { field: 'lastVisit', operator: 'lt', value: new Date('2023-12-01') },
+        { field: 'totalSpends', operator: 'gte', value: 100 }
       ]
-    },
-    description: 'Customers with 6+ visits who are still active in the last 30 days'
+    }
+  },
+  {
+    name: 'High Value Recent',
+    rules: {
+      operator: 'AND',
+      conditions: [
+        { field: 'totalSpends', operator: 'gte', value: 5000 },
+        { field: 'lastVisit', operator: 'gte', value: new Date('2024-01-01') }
+      ]
+    }
+  },
+  {
+    name: 'Frequent Buyers',
+    rules: {
+      operator: 'AND',
+      conditions: [
+        { field: 'visits', operator: 'gte', value: 10 },
+        { field: 'tags', operator: 'contains', value: 'frequent-buyer' }
+      ]
+    }
   }
 ];
 
-// Sample campaign messages
+// Sample campaign messages for different scenarios
 const sampleCampaignMessages = [
   {
-    segment: 'High Value Customers',
-    messages: [
-      'Hi {name}, thank you for being our valued customer! Enjoy exclusive 25% off on premium products.',
-      'Dear {name}, as our VIP customer, you get early access to our new collection with 20% off.',
-      '{name}, your loyalty means everything! Here\'s a special 30% discount just for you.'
-    ]
+    type: 'welcome',
+    subject: 'Welcome to our family!',
+    content: 'Thank you for joining us! Enjoy 15% off your next purchase with code WELCOME15.'
   },
   {
-    segment: 'Inactive Premium Customers',
-    messages: [
-      'Hi {name}, we miss you! Come back with 20% off your next purchase.',
-      'Hey {name}, it\'s been a while! Here\'s a special 25% discount to welcome you back.',
-      '{name}, your favorite items are waiting! Get 30% off this week only.'
-    ]
+    type: 'sale',
+    subject: 'Exclusive Sale Alert!',
+    content: '🔥 Limited time offer! Get up to 50% off selected items. Shop now before it\'s gone!'
   },
   {
-    segment: 'New Low-Engagement Customers',
-    messages: [
-      'Welcome back {name}! Discover more with 15% off on your next order.',
-      'Hi {name}, explore our bestsellers with this special 18% discount.',
-      '{name}, don\'t miss out! Get 20% off on orders above ₹2000.'
-    ]
+    type: 'winback',
+    subject: 'We miss you!',
+    content: 'It\'s been a while since your last visit. Here\'s 20% off to welcome you back!'
   },
   {
-    segment: 'Frequent Shoppers',
-    messages: [
-      'Hi {name}, you\'re amazing! Here\'s 15% off as a token of appreciation.',
-      'Dear {name}, keep shopping and save more! 12% off on your next purchase.',
-      '{name}, thanks for being a loyal customer! Enjoy 18% off today.'
-    ]
+    type: 'birthday',
+    subject: 'Happy Birthday!',
+    content: '🎉 Celebrate your special day with 25% off everything! Code: BIRTHDAY25'
+  },
+  {
+    type: 'vip',
+    subject: 'VIP Exclusive Offer',
+    content: 'As our valued VIP customer, enjoy early access to our premium collection with 30% off!'
+  },
+  {
+    type: 'reminder',
+    subject: 'Don\'t forget your cart!',
+    content: 'You left some amazing items in your cart. Complete your purchase and get free shipping!'
   }
 ];
 
-// AI test prompts for segment generation
-const aiTestPrompts = [
-  'Customers who spent over ₹20,000 and visited more than 5 times',
-  'People who haven\'t shopped in 90 days but previously spent over ₹10,000',
-  'New customers with only 1-2 visits and spending less than ₹3,000',
-  'Active customers who visited in the last 30 days and spent over ₹5,000',
-  'Premium customers with high spending but low visit frequency',
-  'Customers who made their first purchase in the last 3 months',
-  'Inactive users who haven\'t visited in 6 months but had high engagement before'
-];
-
-// Performance test data
-const generateLargeCustomerDataset = (count = 1000) => {
-  const customers = [];
-  const names = ['Rahul', 'Priya', 'Amit', 'Sneha', 'Vikram', 'Meera', 'Arjun', 'Kavya', 'Rohit', 'Divya'];
-  const surnames = ['Kumar', 'Sharma', 'Patel', 'Reddy', 'Singh', 'Gupta', 'Agarwal', 'Nair', 'Krishnan', 'Iyer'];
-  const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'company.com', 'business.in'];
-  const tags = [['new-customer'], ['regular'], ['premium'], ['vip'], ['frequent-buyer'], ['inactive'], ['high-value']];
+// Function to generate sample communication logs with actual campaign IDs
+const generateSampleCommunicationLogs = (insertedCampaigns) => {
+  const campaigns = Array.isArray(insertedCampaigns) ? insertedCampaigns : [insertedCampaigns];
   
-  for (let i = 0; i < count; i++) {
-    const name = names[Math.floor(Math.random() * names.length)];
-    const surname = surnames[Math.floor(Math.random() * surnames.length)];
-    const domain = domains[Math.floor(Math.random() * domains.length)];
-    const email = `${name.toLowerCase()}.${surname.toLowerCase()}${i}@${domain}`;
-    
-    // Generate realistic spending patterns
-    const spendingTier = Math.random();
-    let totalSpends, visits;
-    
-    if (spendingTier < 0.1) { // 10% high spenders
-      totalSpends = Math.floor(Math.random() * 40000) + 15000; // ₹15k-55k
-      visits = Math.floor(Math.random() * 15) + 5; // 5-20 visits
-    } else if (spendingTier < 0.3) { // 20% medium spenders  
-      totalSpends = Math.floor(Math.random() * 10000) + 5000; // ₹5k-15k
-      visits = Math.floor(Math.random() * 8) + 2; // 2-10 visits
-    } else { // 70% low spenders
-      totalSpends = Math.floor(Math.random() * 5000) + 500; // ₹500-5k
-      visits = Math.floor(Math.random() * 4) + 1; // 1-5 visits
+  return [
+    // Logs for first campaign (Summer Sale VIP)
+    {
+      campaignId: campaigns[0]._id.toString(),
+      customerId: 'cust_001',
+      customerName: 'John Smith',
+      customerEmail: 'john.smith@email.com',
+      message: '🌞 Exclusive Summer Sale Alert! As one of our VIP customers, enjoy 25% off all premium items. Use code SUMMER25 at checkout. Valid until July 31st!',
+      status: 'SENT',
+      deliveryId: 'del_12345_001',
+      sentAt: new Date('2024-07-15T10:15:00Z'),
+      createdAt: new Date('2024-07-15T10:00:00Z')
+    },
+    {
+      campaignId: campaigns[0]._id.toString(),
+      customerId: 'cust_003',
+      customerName: 'Emily Johnson',
+      customerEmail: 'emily.johnson@email.com',
+      message: '🌞 Exclusive Summer Sale Alert! As one of our VIP customers, enjoy 25% off all premium items. Use code SUMMER25 at checkout. Valid until July 31st!',
+      status: 'SENT',
+      deliveryId: 'del_12345_002',
+      sentAt: new Date('2024-07-15T10:16:00Z'),
+      createdAt: new Date('2024-07-15T10:00:00Z')
+    },
+    {
+      campaignId: campaigns[0]._id.toString(),
+      customerId: 'cust_005',
+      customerName: 'Michael Davis',
+      customerEmail: 'michael.davis@email.com',
+      message: '🌞 Exclusive Summer Sale Alert! As one of our VIP customers, enjoy 25% off all premium items. Use code SUMMER25 at checkout. Valid until July 31st!',
+      status: 'FAILED',
+      deliveryId: null,
+      sentAt: null,
+      createdAt: new Date('2024-07-15T10:00:00Z')
+    },
+
+    // Logs for second campaign (Win Back Inactive)
+    {
+      campaignId: campaigns[1]._id.toString(),
+      customerId: 'cust_002',
+      customerName: 'Sarah Wilson',
+      customerEmail: 'sarah.wilson@email.com',
+      message: 'We miss you! 💔 It\'s been a while since your last visit. Here\'s 30% off to welcome you back. Use code COMEBACK30. We have exciting new arrivals waiting for you!',
+      status: 'SENT',
+      deliveryId: 'del_12346_001',
+      sentAt: new Date('2024-08-20T14:45:00Z'),
+      createdAt: new Date('2024-08-20T14:30:00Z')
+    },
+    {
+      campaignId: campaigns[1]._id.toString(),
+      customerId: 'cust_004',
+      customerName: 'Robert Brown',
+      customerEmail: 'robert.brown@email.com',
+      message: 'We miss you! 💔 It\'s been a while since your last visit. Here\'s 30% off to welcome you back. Use code COMEBACK30. We have exciting new arrivals waiting for you!',
+      status: 'PENDING',
+      deliveryId: null,
+      sentAt: null,
+      createdAt: new Date('2024-08-20T14:30:00Z')
+    },
+
+    // Logs for third campaign (New Customer Welcome)
+    {
+      campaignId: campaigns[2]._id.toString(),
+      customerId: 'cust_006',
+      customerName: 'Lisa Anderson',
+      customerEmail: 'lisa.anderson@email.com',
+      message: 'Welcome to our family! 🎉 Thank you for your first purchase. Enjoy 15% off your next order with code WELCOME15. Plus, get free shipping on orders over $50!',
+      status: 'SENT',
+      deliveryId: 'del_12347_001',
+      sentAt: new Date('2024-08-25T09:30:00Z'),
+      createdAt: new Date('2024-08-25T09:15:00Z')
+    },
+    {
+      campaignId: campaigns[2]._id.toString(),
+      customerId: 'cust_007',
+      customerName: 'David Thompson',
+      customerEmail: 'david.thompson@email.com',
+      message: 'Welcome to our family! 🎉 Thank you for your first purchase. Enjoy 15% off your next order with code WELCOME15. Plus, get free shipping on orders over $50!',
+      status: 'SENT',
+      deliveryId: 'del_12347_002',
+      sentAt: new Date('2024-08-25T09:31:00Z'),
+      createdAt: new Date('2024-08-25T09:15:00Z')
+    },
+
+    // Logs for fourth campaign (Birthday Campaign - pending)
+    {
+      campaignId: campaigns[3]._id.toString(),
+      customerId: 'cust_001',
+      customerName: 'John Smith',
+      customerEmail: 'john.smith@email.com',
+      message: '🎂 Happy Birthday Month! Celebrate with an exclusive 40% off your entire purchase. As a valued customer, you deserve the best. Code: BIRTHDAY40',
+      status: 'PENDING',
+      deliveryId: null,
+      sentAt: null,
+      createdAt: new Date('2024-09-01T16:45:00Z')
+    },
+    {
+      campaignId: campaigns[3]._id.toString(),
+      customerId: 'cust_008',
+      customerName: 'Jessica Martinez',
+      customerEmail: 'jessica.martinez@email.com',
+      message: '🎂 Happy Birthday Month! Celebrate with an exclusive 40% off your entire purchase. As a valued customer, you deserve the best. Code: BIRTHDAY40',
+      status: 'PENDING',
+      deliveryId: null,
+      sentAt: null,
+      createdAt: new Date('2024-09-01T16:45:00Z')
+    },
+
+    // Logs for fifth campaign (Flash Sale - mixed results)
+    {
+      campaignId: campaigns[4]._id.toString(),
+      customerId: 'cust_009',
+      customerName: 'Chris Lee',
+      customerEmail: 'chris.lee@email.com',
+      message: '⚡ FLASH SALE ALERT! 24 hours only - 50% off selected items! You\'ve been chosen for early access. Shop now before it\'s gone! No code needed.',
+      status: 'SENT',
+      deliveryId: 'del_12348_001',
+      sentAt: new Date('2024-08-30T11:35:00Z'),
+      createdAt: new Date('2024-08-30T11:20:00Z')
+    },
+    {
+      campaignId: campaigns[4]._id.toString(),
+      customerId: 'cust_010',
+      customerName: 'Amanda Taylor',
+      customerEmail: 'amanda.taylor@email.com',
+      message: '⚡ FLASH SALE ALERT! 24 hours only - 50% off selected items! You\'ve been chosen for early access. Shop now before it\'s gone! No code needed.',
+      status: 'FAILED',
+      deliveryId: null,
+      sentAt: null,
+      createdAt: new Date('2024-08-30T11:20:00Z')
     }
-    
-    // Generate last visit date (some recent, some old)
-    const daysAgo = Math.floor(Math.random() * 180); // 0-180 days ago
-    const lastVisit = new Date();
-    lastVisit.setDate(lastVisit.getDate() - daysAgo);
-    
-    // Created date (1-12 months ago)
-    const createdMonthsAgo = Math.floor(Math.random() * 12) + 1;
-    const createdAt = new Date();
-    createdAt.setMonth(createdAt.getMonth() - createdMonthsAgo);
-    
+  ];
+};
+
+// Generate large dataset functions
+const generateLargeCustomerDataset = (count) => {
+  const customers = [];
+  const tags = ['vip', 'regular', 'premium', 'new-customer', 'inactive', 'frequent-buyer'];
+  
+  for (let i = 1; i <= count; i++) {
     customers.push({
-      id: `cust_${String(i + 1).padStart(6, '0')}`,
-      name: `${name} ${surname}`,
-      email,
-      totalSpends,
-      visits,
-      lastVisit,
-      createdAt,
-      tags: tags[Math.floor(Math.random() * tags.length)]
+      id: `perf_cust_${i}`,
+      name: `Performance Customer ${i}`,
+      email: `perf.customer.${i}@example.com`,
+      totalSpends: Math.floor(Math.random() * 50000),
+      visits: Math.floor(Math.random() * 20) + 1,
+      lastVisit: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - Math.random() * 730 * 24 * 60 * 60 * 1000),
+      tags: [tags[Math.floor(Math.random() * tags.length)]]
     });
   }
   
   return customers;
 };
 
+const generateLargeCommunicationLogsDataset = (count, insertedCampaigns) => {
+  const logs = [];
+  const statuses = ['SENT', 'PENDING', 'FAILED'];
+  const campaignIds = insertedCampaigns.map(c => c._id.toString());
+  
+  for (let i = 0; i < count; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const campaignId = campaignIds[Math.floor(Math.random() * campaignIds.length)];
+    const customerId = `perf_cust_${Math.floor(Math.random() * 5000) + 1}`;
+    
+    const createdAt = new Date();
+    createdAt.setMonth(createdAt.getMonth() - Math.floor(Math.random() * 6));
+    
+    const log = {
+      campaignId,
+      customerId,
+      customerName: `Performance Customer ${i + 1}`,
+      customerEmail: `perf.customer.${i + 1}@example.com`,
+      message: `Performance test message for customer ${i + 1}`,
+      status,
+      deliveryId: status === 'SENT' ? `perf_del_${i + 1}` : null,
+      sentAt: status === 'SENT' ? new Date(createdAt.getTime() + Math.random() * 3600000) : null,
+      createdAt
+    };
+    
+    logs.push(log);
+  }
+  
+  return logs;
+};
+
 // Database seeding script
 const seedDatabase = async () => {
   try {
+    await connectDB();
     console.log('🌱 Starting database seeding...');
     
     // Clear existing data
     await Customer.deleteMany({});
     await Order.deleteMany({});
+    await Campaign.deleteMany({});
+    await communicationLog.deleteMany({});
+    await User.deleteMany({});
     console.log('✅ Cleared existing data');
+    
+    // Insert sample users first and get their IDs
+    const insertedUsers = await User.insertMany(sampleUsers);
+    console.log(`✅ Inserted ${sampleUsers.length} sample users`);
+    
+    // Extract user IDs for campaigns
+    const userIds = insertedUsers.map(user => user._id.toString());
     
     // Insert sample customers
     await Customer.insertMany(sampleCustomers);
@@ -329,283 +658,83 @@ const seedDatabase = async () => {
     await Order.insertMany(sampleOrders);
     console.log(`✅ Inserted ${sampleOrders.length} sample orders`);
     
+    // Create and insert sample campaigns with actual user IDs
+    const sampleCampaigns = createSampleCampaigns(userIds);
+    const insertedCampaigns = await Campaign.insertMany(sampleCampaigns);
+    console.log(`✅ Inserted ${sampleCampaigns.length} sample campaigns`);
+    
+    // Generate and insert communication logs with actual campaign IDs
+    const communicationLogsData = generateSampleCommunicationLogs(insertedCampaigns);
+    await communicationLog.insertMany(communicationLogsData);
+    console.log(`✅ Inserted ${communicationLogsData.length} sample communication logs`);
+    
     // Generate and insert large dataset for performance testing
     if (process.env.SEED_LARGE_DATASET === 'true') {
-      const largeDataset = generateLargeCustomerDataset(5000);
-      await Customer.insertMany(largeDataset);
-      console.log(`✅ Inserted ${largeDataset.length} customers for performance testing`);
+      console.log('🔄 Generating large dataset for performance testing...');
+      
+      const largeCustomerDataset = generateLargeCustomerDataset(5000);
+      await Customer.insertMany(largeCustomerDataset);
+      console.log(`✅ Inserted ${largeCustomerDataset.length} customers for performance testing`);
+      
+      const largeCommunicationLogs = generateLargeCommunicationLogsDataset(10000, insertedCampaigns);
+      await communicationLog.insertMany(largeCommunicationLogs);
+      console.log(`✅ Inserted ${largeCommunicationLogs.length} communication logs for performance testing`);
     }
+    
+    // Display seeding summary
+    const counts = {
+      users: await User.countDocuments(),
+      customers: await Customer.countDocuments(),
+      orders: await Order.countDocuments(),
+      campaigns: await Campaign.countDocuments(),
+      communicationLogs: await communicationLog.countDocuments()
+    };
+    
+    console.log('📊 Database Summary:');
+    console.log(`   👥 Users: ${counts.users}`);
+    console.log(`   🛒 Customers: ${counts.customers}`);
+    console.log(`   📦 Orders: ${counts.orders}`);
+    console.log(`   📢 Campaigns: ${counts.campaigns}`);
+    console.log(`   📧 Communication Logs: ${counts.communicationLogs}`);
     
     console.log('🎉 Database seeding completed successfully!');
   } catch (error) {
     console.error('❌ Database seeding failed:', error);
-  }
-};
-
-// API testing utilities
-const testDataIngestion = async (baseUrl = 'http://localhost:5000') => {
-  console.log('🧪 Testing data ingestion APIs...');
-  
-  try {
-    // Test single customer ingestion
-    const customerResponse = await fetch(`${baseUrl}/api/customers`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sampleCustomers[0])
-    });
-    
-    if (customerResponse.ok) {
-      console.log('✅ Customer ingestion API working');
-    }
-    
-    // Test batch customer ingestion
-    const batchResponse = await fetch(`${baseUrl}/api/customers/batch`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customers: sampleCustomers.slice(1, 4) })
-    });
-    
-    if (batchResponse.ok) {
-      console.log('✅ Batch customer ingestion API working');
-    }
-    
-    // Test order ingestion
-    const orderResponse = await fetch(`${baseUrl}/api/orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sampleOrders[0])
-    });
-    
-    if (orderResponse.ok) {
-      console.log('✅ Order ingestion API working');
-    }
-    
-    console.log('🎉 Data ingestion testing completed!');
-  } catch (error) {
-    console.error('❌ Data ingestion testing failed:', error);
-  }
-};
-
-const testCampaignCreation = async (baseUrl = 'http://localhost:5000') => {
-  console.log('🧪 Testing campaign creation...');
-  
-  try {
-    // Test audience preview
-    const previewResponse = await fetch(
-      `${baseUrl}/api/customers/preview?rules=${encodeURIComponent(JSON.stringify(sampleSegmentRules[0].rules))}`,
-      { credentials: 'include' }
-    );
-    
-    if (previewResponse.ok) {
-      const previewData = await previewResponse.json();
-      console.log(`✅ Audience preview: ${previewData.audienceSize} customers`);
-    }
-    
-    // Test campaign creation
-    const campaignData = {
-      name: sampleSegmentRules[0].name,
-      segmentRules: sampleSegmentRules[0].rules,
-      message: sampleCampaignMessages[0].messages[0]
-    };
-    
-    const campaignResponse = await fetch(`${baseUrl}/api/campaigns`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(campaignData)
-    });
-    
-    if (campaignResponse.ok) {
-      const campaign = await campaignResponse.json();
-      console.log(`✅ Campaign created: ${campaign.name} (ID: ${campaign._id})`);
-      return campaign._id;
-    }
-    
-  } catch (error) {
-    console.error('❌ Campaign creation testing failed:', error);
-  }
-};
-
-const testAIFeatures = async (baseUrl = 'http://localhost:5000') => {
-  console.log('🧪 Testing AI features...');
-  
-  try {
-    // Test text to segment rules
-    const segmentResponse = await fetch(`${baseUrl}/api/ai/segment-from-text`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ description: aiTestPrompts[0] })
-    });
-    
-    if (segmentResponse.ok) {
-      const segmentData = await segmentResponse.json();
-      console.log('✅ AI segment generation working');
-      console.log('   Generated rules:', JSON.stringify(segmentData.rules, null, 2));
-    }
-    
-    // Test message suggestions
-    const messageResponse = await fetch(`${baseUrl}/api/ai/message-suggestions`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ 
-        objective: 'bring back high-value customers',
-        audienceSize: 250 
-      })
-    });
-    
-    if (messageResponse.ok) {
-      const messageData = await messageResponse.json();
-      console.log('✅ AI message suggestions working');
-      console.log('   Suggestions:', messageData.suggestions);
-    }
-    
-  } catch (error) {
-    console.error('❌ AI features testing failed:', error);
-  }
-};
-
-// Performance benchmarking
-const benchmarkPerformance = async (baseUrl = 'http://localhost:5000') => {
-  console.log('⚡ Running performance benchmarks...');
-  
-  const benchmarks = {
-    singleCustomerIngestion: async () => {
-      const start = Date.now();
-      const promises = [];
-      
-      for (let i = 0; i < 100; i++) {
-        promises.push(
-          fetch(`${baseUrl}/api/customers`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              ...sampleCustomers[0],
-              id: `bench_cust_${i}`,
-              email: `bench${i}@example.com`
-            })
-          })
-        );
-      }
-      
-      await Promise.all(promises);
-      const duration = Date.now() - start;
-      console.log(`✅ 100 single customer requests: ${duration}ms (${(duration/100).toFixed(2)}ms avg)`);
-    },
-    
-    batchCustomerIngestion: async () => {
-      const start = Date.now();
-      const batchSize = 100;
-      const totalCustomers = 1000;
-      const promises = [];
-      
-      for (let i = 0; i < totalCustomers; i += batchSize) {
-        const batch = generateLargeCustomerDataset(batchSize).map((c, idx) => ({
-          ...c,
-          id: `batch_cust_${i + idx}`,
-          email: `batch${i + idx}@example.com`
-        }));
-        
-        promises.push(
-          fetch(`${baseUrl}/api/customers/batch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ customers: batch })
-          })
-        );
-      }
-      
-      await Promise.all(promises);
-      const duration = Date.now() - start;
-      console.log(`✅ ${totalCustomers} customers in batches: ${duration}ms (${(totalCustomers/(duration/1000)).toFixed(0)} customers/sec)`);
-    },
-    
-    audiencePreview: async () => {
-      const start = Date.now();
-      const promises = [];
-      
-      // Test different segment complexities
-      for (const segmentRule of sampleSegmentRules) {
-        promises.push(
-          fetch(`${baseUrl}/api/customers/preview?rules=${encodeURIComponent(JSON.stringify(segmentRule.rules))}`, {
-            credentials: 'include'
-          })
-        );
-      }
-      
-      await Promise.all(promises);
-      const duration = Date.now() - start;
-      console.log(`✅ ${sampleSegmentRules.length} audience previews: ${duration}ms (${(duration/sampleSegmentRules.length).toFixed(2)}ms avg)`);
-    }
-  };
-  
-  try {
-    await benchmarks.singleCustomerIngestion();
-    await benchmarks.batchCustomerIngestion();
-    await benchmarks.audiencePreview();
-    console.log('🎉 Performance benchmarks completed!');
-  } catch (error) {
-    console.error('❌ Performance benchmarking failed:', error);
+    throw error;
   }
 };
 
 // Export all utilities
 module.exports = {
+  sampleUsers,
   sampleCustomers,
   sampleOrders,
+  createSampleCampaigns,
+  generateSampleCommunicationLogs,
   sampleSegmentRules,
   sampleCampaignMessages,
-  aiTestPrompts,
   generateLargeCustomerDataset,
+  generateLargeCommunicationLogsDataset,
   seedDatabase,
-  testDataIngestion,
-  testCampaignCreation,
-  testAIFeatures,
-  benchmarkPerformance
+  connectDB
 };
 
-// CLI usage
+// Command line execution
 if (require.main === module) {
-  const command = process.argv[2];
+  const args = process.argv.slice(2);
   
-  switch (command) {
-    case 'seed':
-      seedDatabase();
-      break;
-    case 'test':
-      (async () => {
-        await testDataIngestion();
-        await testCampaignCreation();
-        await testAIFeatures();
-      })();
-      break;
-    case 'benchmark':
-      benchmarkPerformance();
-      break;
-    case 'generate':
-      const count = parseInt(process.argv[3]) || 1000;
-      const customers = generateLargeCustomerDataset(count);
-      console.log(`Generated ${customers.length} test customers`);
-      console.log('Sample:', JSON.stringify(customers.slice(0, 2), null, 2));
-      break;
-    default:
-      console.log(`
-Usage: node sample-data.js <command>
-
-Commands:
-  seed      - Seed database with sample data
-  test      - Run API tests with sample data
-  benchmark - Run performance benchmarks  
-  generate <count> - Generate test customer data
-
-Examples:
-  node sample-data.js seed
-  node sample-data.js test
-  node sample-data.js generate 5000
-      `);
+  if (args.includes('seed')) {
+    seedDatabase()
+      .then(() => {
+        console.log('Seeding completed. Exiting...');
+        process.exit(0);
+      })
+      .catch((error) => {
+        console.error('Seeding failed:', error);
+        process.exit(1);
+      });
+  } else {
+    console.log('Usage: node sample-data.js seed');
+    console.log('Add SEED_LARGE_DATASET=true environment variable for large dataset');
   }
 }
-
-// Complete the file - it was cut off at the CLI usage section
-// The file is now complete with all necessary functions and utilities
