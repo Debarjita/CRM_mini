@@ -267,7 +267,7 @@ async function processBatchUpdates() {
   } catch (error) {
     console.error('❌ Batch delivery update failed:', error);
     
-    // Re-add failed updates to retry (optional)
+    
     // deliveryUpdateBatch.push(...batch);
   }
 }
