@@ -5,8 +5,7 @@ import {
   HelpCircle, BarChart3, Sparkles, Zap, Copy, Calendar, Activity,
   Target as TargetIcon, UserCheck, Timer
 } from 'lucide-react';
-
-const API_BASE = 'http://localhost:5000';
+import API_CONFIG from '../config/api';
 
 // =====================
 // Type definitions
@@ -132,7 +131,7 @@ const CRMApp: React.FC = () => {
 
   const fetchUser = async (): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE}/auth/user`, { credentials: 'include' });
+      const response = await fetch(`${API_CONFIG.baseURL}/auth/user`, { credentials: 'include' });
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
@@ -146,7 +145,7 @@ const CRMApp: React.FC = () => {
 
   const handleLogout = async (): Promise<void> => {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
+      await fetch(`${API_CONFIG.baseURL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -203,7 +202,7 @@ const CRMApp: React.FC = () => {
 // =====================
 const LoginPage: React.FC = () => {
   const handleGoogleLogin = (): void => {
-    window.location.href = `${API_BASE}/auth/google`;
+    window.location.href = `${API_CONFIG.baseURL}/auth/google`;
   };
 
   return (
@@ -328,7 +327,7 @@ const CampaignPerformanceComponent: React.FC<{ campaignId: string }> = ({ campai
   const fetchPerformance = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/ai/campaign-performance-summary`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/ai/campaign-performance-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -433,7 +432,7 @@ const LookalikeAudience: React.FC<{ baseSegmentId: string; onApply?: (rules: Seg
   const fetchLookalikeSuggestions = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/ai/lookalike-audience`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/ai/lookalike-audience`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -549,7 +548,7 @@ const OptimalTiming: React.FC<{ audienceRules: SegmentRules }> = ({ audienceRule
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE}/api/ai/optimal-timing`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/ai/optimal-timing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -658,7 +657,7 @@ const RealTimeStatsComponent: React.FC<{ campaignId: string }> = ({ campaignId }
 
   const fetchRealTimeStats = useCallback(async (): Promise<void> => {
     try {
-      const response = await fetch(`${API_BASE}/api/campaigns/${campaignId}/realtime`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/campaigns/${campaignId}/realtime`, {
         credentials: 'include'
       });
 
@@ -764,7 +763,6 @@ const RealTimeStatsComponent: React.FC<{ campaignId: string }> = ({ campaignId }
             <div>
               <p className="text-xs text-blue-700">Delivery Rate</p>
               <p className="text-lg font-semibold text-blue-900">
-                {/* Fix: Ensure deliveryRate is treated as a number */}
                 {typeof stats.realTimeStats.deliveryRate === 'number' 
                   ? stats.realTimeStats.deliveryRate.toFixed(1)
                   : parseFloat(stats.realTimeStats.deliveryRate || '0').toFixed(1)
@@ -774,7 +772,6 @@ const RealTimeStatsComponent: React.FC<{ campaignId: string }> = ({ campaignId }
             <div>
               <p className="text-xs text-blue-700">Avg. Delivery Time</p>
               <p className="text-lg font-semibold text-blue-900">
-                {/* Fix: Ensure avgDeliveryTime is properly handled */}
                 {stats.realTimeStats.avgDeliveryTime 
                   ? `${typeof stats.realTimeStats.avgDeliveryTime === 'number' 
                       ? stats.realTimeStats.avgDeliveryTime.toFixed(1) 
@@ -856,7 +853,7 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE}/api/campaigns`, { credentials: 'include' });
+      const response = await fetch(`${API_CONFIG.baseURL}/api/campaigns`, { credentials: 'include' });
       if (response.ok) {
         const campaigns: Campaign[] = await response.json();
         const totalSent = campaigns.reduce((sum, c) => sum + c.stats.sent, 0);
@@ -1001,8 +998,6 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       </div>
-
-      
     </div>
   );
 };
@@ -1026,7 +1021,7 @@ const CampaignManager: React.FC<{ onApplyLookalike?: (rules: SegmentRules) => vo
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE}/api/campaigns`, { credentials: 'include' });
+      const response = await fetch(`${API_CONFIG.baseURL}/api/campaigns`, { credentials: 'include' });
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       const data: Campaign[] = await response.json();
       setCampaigns(data);
@@ -1042,7 +1037,7 @@ const CampaignManager: React.FC<{ onApplyLookalike?: (rules: SegmentRules) => vo
     if (!window.confirm('Are you sure you want to delete this campaign?')) return;
 
     try {
-      const response = await fetch(`${API_BASE}/api/campaigns/${id}`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/campaigns/${id}`, {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -1250,7 +1245,7 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
 
     try {
       const response = await fetch(
-        `${API_BASE}/api/campaigns/preview?rules=${encodeURIComponent(JSON.stringify(rules))}`,
+        `${API_CONFIG.baseURL}/api/campaigns/preview?rules=${encodeURIComponent(JSON.stringify(rules))}`,
         { credentials: 'include' }
       );
 
@@ -1272,7 +1267,7 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
     setErrors({});
 
     try {
-      const response = await fetch(`${API_BASE}/api/ai/segment-from-text`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/ai/segment-from-text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1295,7 +1290,7 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
   const getMessageSuggestions = async (): Promise<void> => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/ai/message-suggestions`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/ai/message-suggestions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1343,7 +1338,7 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
     setErrors({});
 
     try {
-      const response = await fetch(`${API_BASE}/api/campaigns`, {
+      const response = await fetch(`${API_CONFIG.baseURL}/api/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1545,14 +1540,12 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
           </div>
 
           {/* Optimal Timing panel lives directly under rules */}
-          <div className="bg-white rounded-2xl shadow-none border-none p-0">
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Optimal Timing (AI)</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                We’ll analyze your current audience rules and suggest the best day & time to send.
-              </p>
-              <OptimalTiming audienceRules={rules} />
-            </div>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Optimal Timing (AI)</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              We'll analyze your current audience rules and suggest the best day & time to send.
+            </p>
+            <OptimalTiming audienceRules={rules} />
           </div>
 
           <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-100">
@@ -1612,7 +1605,6 @@ const SegmentBuilder: React.FC<SegmentBuilderProps> = ({ onCampaignCreated, pref
             }`}
             placeholder="Write your campaign message. Use {name} to personalize."
           />
-
         </div>
 
         <div className="mt-4 flex items-center justify-between">
@@ -1674,7 +1666,7 @@ const InsightsView: React.FC<{ onApplyLookalike?: (rules: SegmentRules) => void 
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE}/api/campaigns`, { credentials: 'include' });
+        const res = await fetch(`${API_CONFIG.baseURL}/api/campaigns`, { credentials: 'include' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: Campaign[] = await res.json();
         setCampaigns(data);
@@ -1759,3 +1751,5 @@ const InsightsView: React.FC<{ onApplyLookalike?: (rules: SegmentRules) => void 
 };
 
 export default CRMApp;
+      
+    
