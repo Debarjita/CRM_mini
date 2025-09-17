@@ -39,7 +39,7 @@ A comprehensive customer relationship management platform with intelligent segme
 - MongoDB with Mongoose ODM
 - Redis with Bull Queue for job processing
 - Passport.js for Google OAuth
-- Swagger for API documentation
+- Postman for API documentation
 
 **Infrastructure:**
 - Docker & Docker Compose
@@ -108,7 +108,6 @@ npm start
 ### 4. Access the Application
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
-- **API Documentation**: http://localhost:5000/api-docs
 - **Queue Monitor**: http://localhost:3001
 
 ## 📚 API Documentation
@@ -488,7 +487,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions and support:
 - Create an issue in the repository
-- Check the API documentation at `/api-docs`
 - Review the Postman collection for examples
 
 ---
