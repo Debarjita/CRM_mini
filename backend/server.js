@@ -22,10 +22,24 @@ require('./models');
 const routes = require('./routes');
 const { processQueues } = require('./queues/processors');
 
-
-
 // Redis connection for queues
-const redisClient = redis.createClient(process.env.REDIS_URL || 'redis://localhost:6379');
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+
+// Handle Redis connection
+redisClient.on('error', (err) => {
+  console.log('Redis Client Error', err);
+});
+
+redisClient.on('connect', () => {
+  console.log('Connected to Redis');
+});
+
+// Connect to Redis
+redisClient.connect().catch(console.error);
+
+// Bull queues with Redis URL
 const campaignQueue = new Bull('campaign processing', process.env.REDIS_URL || 'redis://localhost:6379');
 const deliveryQueue = new Bull('delivery processing', process.env.REDIS_URL || 'redis://localhost:6379');
 
