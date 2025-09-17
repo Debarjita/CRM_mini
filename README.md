@@ -39,7 +39,7 @@ A comprehensive customer relationship management platform with intelligent segme
 - MongoDB with Mongoose ODM
 - Redis with Bull Queue for job processing
 - Passport.js for Google OAuth
-- Swagger for API documentation
+- Postman for API documentation
 
 **Infrastructure:**
 - Docker & Docker Compose
