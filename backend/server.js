@@ -261,24 +261,7 @@ app.use('*', (req, res) => {
 // Initialize queue processors
 processQueues(campaignQueue, deliveryQueue);
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
-  server.close(() => {
-    mongoose.connection.close();
-    redisClient.quit();
-    process.exit(0);
-  });
-});
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    mongoose.connection.close();
-    redisClient.quit();
-    process.exit(0);
-  });
-});
 
 // Trust proxy for production (when behind reverse proxy/load balancer)
 if (process.env.NODE_ENV === 'production') {
@@ -300,16 +283,25 @@ const server = app.listen(PORT, () => {
     }
   }
 
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    mongoose.connection.close();
+    redisClient.quit();
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received. Shutting down gracefully...');
+  server.close(() => {
+    mongoose.connection.close();
+    redisClient.quit();
+    process.exit(0);
+  });
+});
   
-  // Log configuration warnings
-  if (process.env.NODE_ENV === 'production') {
-    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.includes('change_this')) {
-      console.error('❌ CRITICAL: Set a secure SESSION_SECRET in production!');
-    }
-    if (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes('localhost')) {
-      console.warn('⚠️  WARNING: Consider using a production MongoDB instance');
-    }
-  }
 });
 
 module.exports = app;
