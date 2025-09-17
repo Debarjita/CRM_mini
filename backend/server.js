@@ -64,11 +64,14 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    const allowedOrigins = process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000'];
-    if (!origin || allowedOrigins.includes(origin)) {
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'https://crmmini-production.up.railway.app', // Add your Railway domain
+      undefined // Allow requests with no origin (like Railway health checks)
+    ];
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
