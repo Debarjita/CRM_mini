@@ -286,19 +286,20 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Start server
-const server = app.listen(PORT, async () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   
-  // Connect to Redis if we're going to use the client
-  if (process.env.REDIS_URL) {
-    try {
-      await redisClient.connect();
-      console.log('✅ Connected to Redis');
-    } catch (error) {
-      console.warn('⚠️  Redis connection failed:', error.message);
+  // Log configuration warnings
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.includes('change_this')) {
+      console.error('❌ CRITICAL: Set a secure SESSION_SECRET in production!');
+    }
+    if (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes('localhost')) {
+      console.warn('⚠️  WARNING: Consider using a production MongoDB instance');
     }
   }
+
   
   // Log configuration warnings
   if (process.env.NODE_ENV === 'production') {
